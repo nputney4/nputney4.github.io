@@ -1,16 +1,23 @@
 [
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this site\n\n1 + 1\n\n[1] 2"
-  },
-  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Nicholas Putney",
     "section": "",
-    "text": "This is a test."
+    "text": "I am a first-year PhD candidate at Wageningen University & Research in the groups of Mathematical and Statistical Methods and Human Health and Nutrition. My project involves the development, and application, of causal inference methods to improve our understanding of the relationship between what we eat and how we age.\nI completed a masters of science in statistics from the University of Geneva. Before this, I studied biochemistry at SUNY Plattsburgh, located in upstate New York."
+  },
+  {
+    "objectID": "index.html#hello",
+    "href": "index.html#hello",
+    "title": "Nicholas Putney",
+    "section": "",
+    "text": "I am a first-year PhD candidate at Wageningen University & Research in the groups of Mathematical and Statistical Methods and Human Health and Nutrition. My project involves the development, and application, of causal inference methods to improve our understanding of the relationship between what we eat and how we age.\nI completed a masters of science in statistics from the University of Geneva. Before this, I studied biochemistry at SUNY Plattsburgh, located in upstate New York."
+  },
+  {
+    "objectID": "cv.html",
+    "href": "cv.html",
+    "title": "CV",
+    "section": "",
+    "text": "This browser does not support inline PDFs.\n  &lt;a href=\"files/PutneyNicholasCV_October19th2025.pdf\"&gt;Download the PDF&lt;/a&gt; to view it."
   }
 ]
