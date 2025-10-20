@@ -20,7 +20,7 @@ about:
 
 ## Hello!
 
-I am a first-year PhD candidate at [Wageningen University & Research](https://www.wur.nl/en.htm) in the groups of [Mathematical and Statistical Methods](https://research.wur.nl/en/organisations/mathematical-and-statistical-methods-biometris) and [Human Health and Nutrition](https://www.wur.nl/en/research-results/chair-groups/agrotechnology-and-food-sciences/human-nutrition-and-health.htm). My project involves the development, and application, of causal inference methods to improve our understanding of the relationship between what we eat and how we age. 
+I am a first-year PhD candidate at [Wageningen University & Research](https://www.wur.nl/en.htm) in the groups of [Mathematical and Statistical Methods](https://research.wur.nl/en/organisations/mathematical-and-statistical-methods-biometris) and [Human Health and Nutrition](https://www.wur.nl/en/research-results/chair-groups/agrotechnology-and-food-sciences/human-nutrition-and-health.htm). My project involves the development, and application, of causal inference methods to improve our understanding of how the food we eat influences the aging process. 
 
 I completed a masters of science in statistics from the [University of Geneva](https://www.unige.ch/gsem/en/programs/masters/statistics/). Before this, I studied biochemistry at [SUNY Plattsburgh](https://www.plattsburgh.edu/), located in upstate New York.
 
