@@ -1,0 +1,5 @@
+---
+title: "Demystifying Random and Fixed Effects Across Disciplines (TEST)"
+format: html
+---
+An investigation into how usage of "random" and "fixed" effects varies across disciplines.

@@ -1,0 +1,6 @@
+---
+title: "Invariant Causal Prediction (TEST)"
+format: html
+---
+
+A gentle introduction to invariant causal prediction.
