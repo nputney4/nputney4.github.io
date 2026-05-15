@@ -123,6 +123,7 @@ Causal discovery has strong potential to aid in 3., especially when the system u
 The data generating processes considered here will be kept simple to see how discovery methods perform in the best case scenario.
 
 ```{r}
+#| include: false
 # Libraries
 library(dplyr)
 library(pcalg)
@@ -130,12 +131,12 @@ library(causalDisco)
 library(SID)
 ```
 
-I generated multivariate normal data, with only five variables and a probability of connecting an edge set to 0.5. Again, the idea to keep things simple. F
+I generated multivariate normal data, with only five variables and a probability of connecting an edge set to 0.5. Again, the idea is to keep things simple. 
 ```{r, echo=TRUE}
 # Generate a random ground truth DAG 
 n <- 10000
 e_prob <- 0.5
-p <- 5
+p <- 10
 
 set.seed(2)
 gt_sim <- pcalg::randomDAG(p, prob = e_prob, lB=0.1, uB=1)
@@ -263,7 +264,11 @@ p_gt + p_h1 + p_h2
 
 Even though the SHD for $\mathcal{H_1}$ and $\mathcal{H_2}$ are the same, the graphs lead to different causal conclusions. Let's say we are interested in estimating the effect of $X_1$ on $X_3$, $P(X_3 | \text{do}(X_3 = c))$. According to $\mathcal{G}$, a correct adjustment set (think: should include in the statistical model) would be $\{X_4\}$. The extra arrow in $\mathcal{H_1}$ does not change this adjustment set. On the other hand, $\mathcal{H_2}$  suggests that we should not adjust for $X_4$, which would lead to an incorrect estimate. 
 
-Despite this drawback, the SHD is reported in essentially every paper that evaluates causal discovery algorithms. 
+Despite this drawback, the SHD is reported in most papers that evaluates causal discovery algorithms. 
+
+{{< dstart summary = "Other metrics" >}}
+Other metrics that simply compare edge differences are also commonly reported, such as precision, recall, false discovery rate, etc.
+{{< dstop >}}
 
 ### Structural intervention distance
 Using an example similar to the one above as motivation, @petersStructuralInterventionDistance2015 propose the "structural intervention distance" (SID). The SID involves testing if the adjustment sets implied by some estimated graph $\mathcal{H}$ are valid in the true graph $\mathcal{G}$. More specifically, the authors propose using the parents of the variable being intervened upon as the adjustment set to compare between graphs. Then, for for every ($i,j$), it is tested if the parents of $X_i$ in $\mathcal{H}$, $\text{PA}^\mathcal{H}_{X_i}$, are a valid adjustment for calculating $p^\mathcal{G}(X_j | \text{do}(X_i))$. If $\text{PA}^\mathcal{H}_{X_i}$ is not valid, then the SID increases by 1. 
@@ -279,7 +284,7 @@ where $\mathcal{A}^\mathcal{G}(i,j)$ are the collection of valid adjustment sets
 
 {{< dstop >}}
 
-I personally think this evaluation metric already provides a better sense of how "useful" a causal discovery algorithm may be, given that it explicitly uses causality in its definition. It should be said, though, that the parents of $X_i$ are not the only way to define an adjustment set. It's also important to recognize that this metric is "global" each $(i,j)$ contributes equal. This is in contrast to the motivating context, where the main interest is in the effects of a limited number of exposures on a limited number of outcomes. 
+I think this evaluation metric provides a better sense of how "useful" a causal discovery algorithm may be, given that it explicitly uses causality in its definition. It should be said, though, that the parents of $X_i$ are not the only way to define an adjustment set. It's also important to recognize that this metric is "global", as each $(i,j)$ contributes equally. This is in contrast to the motivating context, where the main interest is in the effects of a limited number of exposures on a limited number of outcomes. 
 
 Below is a simple example below where an edge reversal later in the topological order leads to a high SID. The only difference between $\mathcal{G}$ and $\mathcal{H}$ is the change from $X_5 \rightarrow X_6$ to $X_5 \leftarrow X_6$. 
 
@@ -298,9 +303,6 @@ h1 <- caugi(
   X6 %-->% X5,
   class = "DAG"
 )
-
-plot(gt)
-plot(h1)
 
 p_gt <- plot(gt,
              layout = "tiered",
@@ -321,9 +323,12 @@ p_h <- plot(h1,
 p_gt / p_h
 ```
 ```{r}
+#| eval: false
+#| include: false
 # Using type = parent and normalized = FALSE is equivalent to the SID
 aid(gt, h1, type = "parent", normalized = FALSE)
 
+# Verify that above gives same result as SID
 # gt_adj <- as_adjacency(gt)
 # h1_adj <- as_adjacency(h1)[rownames(gt_adj),]
 # h1_adj <- h1_adj[,colnames(gt_adj)]
@@ -337,11 +342,225 @@ aid(gt, h1, type = "parent", normalized = FALSE)
 Comparing these two graphs, $\text{SID}(\mathcal{G}, \mathcal{H}) = 7$. Despite this, $\mathcal{H}$ gives a valid adjustment set for estimating the total effect of $X_1$ on $X_3$.
 
 ```{r}
+# Using type = parent and normalized = FALSE is equivalent to the SID
 aid(gt, h1, type = "parent", normalized = FALSE)
 ```
 
 ### Adjustment identification distance
 The last metric I plan to use is the adjustment identification distance (AID) which includes the SID as a special case. 
+
+### Comparing causal effects
+The SID and AID are still not exactly aligned with the context laid out in introduction. What we really want to know is: if we use the adjustment sets implied by our estimated graph, how off will our causal effect estimate be (and with what degree of certainty). 
+
+We can test this! The idea will be to calculate the average bias over each possible total causal effect using the estimated graph. The first step is calculating the matrix of causal coefficients, $B$, in $X = BX + \epsilon$. Afterwards, the matrix of all total causal effects for each $(i,j), i \ne j$ is given by $T = (I - B)^{-1} - I$. The entries $i,j$ in $T^{'}$ give $\mathbb{E}[X_j | \text{do}(X_i = 1)] - \mathbb{E}[X_j | \text{do}(X_i = 0)]$. 
+
+Now that we have some idea of how the algorithms will be evaluated, let's move on to the actual evaluation part.
+
+
+## Evaluation
+```{r}
+# Some helper functions...
+graphNEL_to_B <- function(g) {
+  nodes <- g@nodes
+  p <- length(nodes)
+  
+  # Initialize coefficient matrix
+  B <- matrix(
+    0,
+    nrow = p,
+    ncol = p,
+    dimnames = list(nodes, nodes)
+  )
+
+  # Extract weighted edges
+  ed <- g@edgeData@data
+  for(edge_name in names(ed)) {
+    
+    # edge_name format: "parent|child"
+    parts <- strsplit(edge_name, "\\|")[[1]]
+    parent <- parts[1]
+    child  <- parts[2]
+
+    weight <- ed[[edge_name]]$weight
+
+    # B[child, parent]
+    B[child, parent] <- weight
+  }
+
+  return(B)
+}
+
+estimate_B <- function(dag, data) {
+  vars <- dag@nodes$name
+  p <- length(vars)
+
+  # Ensure ordering consistency
+  data <- data[, vars]
+  S <- cov(data)
+  B <- matrix(
+    0,
+    nrow = p,
+    ncol = p,
+    dimnames = list(vars, vars)
+  )
+
+  for(child in vars) {
+    pa <- parents(dag, child)
+    if(length(pa) == 0)
+      next
+
+    # Parent covariance matrix
+    S_pp <- S[pa, pa, drop = FALSE]
+
+    # Parent-child covariance vector
+    S_py <- S[pa, child, drop = FALSE]
+
+    # Regression coefficients
+    beta <- solve(S_pp, S_py)
+
+    # Store 
+    B[child, pa] <- beta
+  }
+
+  return(B)
+}
+```
+
+```{r}
+compute_total_effect_matrix <- function(B){
+  p <- nrow(B)
+  t(solve(diag(p) - B) - diag(p))
+}
+
+get_all_dags <- function(cg){
+  cg_nel <- igraph::as_graphnel(caugi::as_igraph(cg))
+  cg_adj <- as(cg_nel, "matrix")
+  all_dags <- pdag2allDags(cg_adj)
+  p <- nrow(cg_adj)
+  lapply(seq_len(nrow(all_dags$dags)), function(i){
+    dag_adj <- matrix(
+      all_dags$dags[i, ],
+      p, p,
+      byrow = TRUE,
+      dimnames = list(rownames(cg_adj), colnames(cg_adj))
+    )
+    as_caugi(dag_adj)
+  })
+}
+
+compute_graph_metrics <- function(gt, est){
+  list(
+    shd = shd(gt, est),
+    sid = aid(gt, est, type = "parent", normalize = FALSE),
+    aid = aid(gt, est, type = "ancestor", normalize = FALSE),
+    aid_norm = aid(gt, est, type = "ancestor", normalize = TRUE)
+  )
+}
+
+# Total effect matrices
+calculate_total_effect_matrices <- function(cg, df, PDAG = TRUE){
+  if(PDAG){
+    all_dags <- get_all_dags(cg)
+    T_ls <- lapply(all_dags, function(dag){
+      B_cg <- estimate_B(dag = dag, data = df)
+      T_cg <- compute_total_effect_matrix(B_cg)
+      unlist(T_cg)
+    })
+    return(T_ls)
+  } else {
+    B_cg <- estimate_B(dag = cg, data = df)
+    T_cg <- compute_total_effect_matrix(B_cg)
+    return(T_cg)
+  }
+}
+
+# Total effect distance
+calculate_total_effect_distance <- function(gt, est, df, PDAG = TRUE){
+
+  # True total effect matrix
+  gt_nel <- igraph::as_graphnel(caugi::as_igraph(gt))
+  B_true <- graphNEL_to_B(gt_nel)
+  T_true <- compute_total_effect_matrix(B_true)
+
+  # Estimated total effect matrices
+  T_est <- calculate_total_effect_matrices(
+    cg = est,
+    df = df,
+    PDAG = PDAG
+  )
+
+  # Compare
+  if(PDAG){
+    sapply(T_est, function(x){
+      mean(abs(T_true - x))
+    })
+  } else {
+    mean(abs(T_true - T_est))
+  }
+}
+```
+
+
+```{r}
+# Main metrics function
+calc_distance_metrics <- function(gt, est, graph_only = FALSE, df = NULL, PDAG = TRUE){
+  if(PDAG){
+    all_dags <- get_all_dags(est)
+    metrics <- lapply(all_dags, function(dag){
+      metrics_i <- compute_graph_metrics(gt, dag)
+      if(!graph_only){metrics_i$d_tce <- calculate_total_effect_distance(gt = gt, est = dag, df = df, PDAG = FALSE)}
+      metrics_i
+    })
+  } else {
+    metrics <- compute_graph_metrics(gt, est)
+    if(!graph_only){metrics$d_tce <- calculate_total_effect_distance(gt, est, df, PDAG = FALSE)}
+  }
+  return(metrics)
+}
+```
+
+```{r}
+test <- calc_distance_metrics(gt = as_caugi(gt_sim), est = est, graph_only = FALSE, df = df, PDAG = TRUE)
+
+est_dag <- dag_from_pdag(est)
+test <- calc_distance_metrics(gt = as_caugi(gt_sim), est = est_dag, graph_only = FALSE, df = df, PDAG = FALSE)
+
+```
+
+
+
+
+
+
+```{r}
+calc_distance_metrics <- function(gt, est, graph_only = FALSE, df = NULL, PDAG = TRUE){
+  if(!graph_only & is.null(df)){stop("If graph_only = FALSE, a df must be provided.")}
+  d_shd <- shd(gt, est)
+  d_sid <- aid(gt, est, type = "parent", normalize = FALSE)
+  d_aid_a <- aid(gt, est, type = "ancestor", normalize = FALSE)
+  d_aid_a_norm <- aid(gt, est, type = "ancestor", normalize = TRUE)
+  metrics <- list(shd = d_shd, sid = d_sid, aid = d_aid_a, aid_norm = d_aid_a_norm)
+  if(!graph_only){
+    metrics$tce <- calculate_total_effect_distance(gt, est, df, PDAG = FALSE)
+    }
+  return(metrics)
+}
+
+est_dag <- dag_from_pdag(est)
+
+calc_distance_metrics(gt = as_caugi(gt_sim), est = est, df = df)
+calc_distance_metrics(gt = as_caugi(gt_sim), est = est_dag, df = df)
+
+calc_distance_causal_
+```
+
+
+
+```{r}
+# Here the end result should be the metrics for each algorithm. Then we go to the null distributions
+```
+
+
 
 # Results
 
@@ -603,18 +822,8 @@ calculate_total_effect_distance <- function(gt, est, df, PDAG = TRUE){
 
 ```
 
-```{r}
-generate_random_dag <- function(p, e_prob){
-  V_names <- as.character(sample(1:p)) # this determines topological order
-  g_rand <- pcalg::randomDAG(p, prob = e_prob, lB=0.1, uB=1, V = V_names)
-  return(as_caugi(g_rand))
-  
-}
-```
 
 ```{r}
-library(purrr)
-
 gt_sim <- as_caugi(gt_sim)
 # tce - total causal effect
 calc_tce_random_dag <- function(gt, e_prob, df, metric = "MAE"){
@@ -666,8 +875,16 @@ hist(rand_tce_results$mae)
 
 
 # Summary
+- Motivated the field of causal discovery
+- Discussed some of the metrics commonly used to evaluate causal discovery methods
+- Evaluated several causal discovery algorithms in a relatively simple setting
+- Compared the performance to randomly generating a causal graph
 
 # Conclusions
+Now we return to the original question: can causal discovery algorithms be useful for practical problems? The above would suggest that, as a "data-driven" method to "automate" variable selection in applied problems, the answer is no! But in the real-world, one can encode background knowledge to forbid implausible, or enforce known, edges, which may help.
+
+Although, it should again be reiterated that this is in the simplest case using relatively large sample sizes, no missing data, methods that are "correct" for the data type, etc. Real-world data, especially in the health and biomedical sciences is considerably more complex: data includes mixed types, multiple measurements for the same individual, people drop-out from studies and sample sizes can be small. There do not currently exist causal discovery methods that account for all of these complexities. It is therefore an even bigger unknown how useful causal discovery methods can be in these settings. Luckily, this is an active area of research, and the future is promising! 
+
 
 # Additional notes
 - All causal graphs were made using the 'caugi' R package (https://caugi.org/)
