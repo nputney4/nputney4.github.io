@@ -1,5 +1,6 @@
 ---
-title: "Are causal discovery algorithms good enough for practical problems?"
+title: "Are causal discovery algorithms useful? How can we tell?"
+subtitle: "aligning evaluation metrics with research goals" 
 author: "Nicholas Putney"
 editor: visual
 bibliography: WageningenPhDReadingList.json
@@ -139,8 +140,8 @@ e_prob <- 0.5
 p <- 10
 
 set.seed(2)
-gt_sim <- pcalg::randomDAG(p, prob = e_prob, lB=0.1, uB=1)
-df <- as.data.frame(rmvDAG(n, gt_sim, errDist="normal"))
+gt_sim <- generate_graph(n = p, p = e_prob, class = "DAG", seed = 106)
+df <- simulate_data(gt_sim, n, coef_range = c(-1,1))
 ```
 
 
@@ -153,10 +154,10 @@ pc_result <- disco(data = df, method = pc_pcalg)
 est <- pc_result$caugi
 ```
 
-
 ```{r}
-
+# try some more algorithms...
 ```
+
 
 # Evaluating algorithms
 
@@ -360,36 +361,6 @@ Now that we have some idea of how the algorithms will be evaluated, let's move o
 ## Evaluation
 ```{r}
 # Some helper functions...
-graphNEL_to_B <- function(g) {
-  nodes <- g@nodes
-  p <- length(nodes)
-  
-  # Initialize coefficient matrix
-  B <- matrix(
-    0,
-    nrow = p,
-    ncol = p,
-    dimnames = list(nodes, nodes)
-  )
-
-  # Extract weighted edges
-  ed <- g@edgeData@data
-  for(edge_name in names(ed)) {
-    
-    # edge_name format: "parent|child"
-    parts <- strsplit(edge_name, "\\|")[[1]]
-    parent <- parts[1]
-    child  <- parts[2]
-
-    weight <- ed[[edge_name]]$weight
-
-    # B[child, parent]
-    B[child, parent] <- weight
-  }
-
-  return(B)
-}
-
 estimate_B <- function(dag, data) {
   vars <- dag@nodes$name
   p <- length(vars)
@@ -426,16 +397,144 @@ estimate_B <- function(dag, data) {
 }
 ```
 
+
+```{r, echo=TRUE}
+# Generate a random ground truth DAG 
+n <- 10000
+e_prob <- 0.5
+p <- 10
+
+set.seed(106)
+gt_sim <- generate_graph(n = p, p = e_prob, class = "DAG", seed = 106)
+df <- simulate_data(gt_sim, n, coef_range = c(-1,1))
+
+#gt_sim <- pcalg::randomDAG(p, prob = e_prob, lB=0.3, uB=1)
+#df <- as.data.frame(rmvDAG(n, gt_sim, errDist="normal"))
+```
+
+
+# Running causal discovery algorithms
+I now run the PC algorithm using the Fisher-Z test (see e.g. https://www.statisticshowto.com/fisher-z/).
+```{r, echo = FALSE}
+# Estimate (CP)DAG from simulated data
+pc_pcalg <- causalDisco::pc(engine = "pcalg", test = "fisher_z", alpha = 0.05)
+pc_result <- disco(data = df, method = pc_pcalg)
+est <- pc_result$caugi
+```
+
+```{r}
+offdiag <- function(M){
+  M[row(M) != col(M)]
+}
+
+sign_tol <- function(x, tol = 1e-8){
+  ifelse(abs(x) < tol, 0, sign(x))
+}
+
+sign_accuracy <- function(T_true, T_est, tol = 1e-8){
+
+  true <- offdiag(T_true)
+  est  <- offdiag(T_est)
+
+  mean(
+    sign_tol(true, tol) ==
+    sign_tol(est, tol)
+  )
+}
+
+nonzero_effects_recall <- function(
+    T_true,
+    T_est,
+    tol = 1e-8
+){
+
+  # Exclude diagonals
+  idx_offdiag <- row(T_true) != col(T_true)
+
+  true <- T_true[idx_offdiag]
+  est  <- T_est[idx_offdiag]
+
+  # True nonzero effects
+  idx_true_nonzero <- abs(true) >= tol
+
+  # Was estimated as nonzero?
+  recovered <- abs(est[idx_true_nonzero]) >= tol 
+
+  mean(recovered)
+}
+
+true_effects_recall <- function(
+    T_true,
+    T_est,
+    rel_threshold = 0.2,
+    abs_threshold = NULL,
+    tol = 1e-8
+){
+
+  # Remove diagonals
+  idx_offdiag <- row(T_true) != col(T_true)
+
+  true <- T_true[idx_offdiag]
+  est  <- T_est[idx_offdiag]
+
+  # Keep only true nonzero effects
+  idx_true_nonzero <- abs(true) >= tol
+
+  true <- true[idx_true_nonzero]
+  est  <- est[idx_true_nonzero]
+
+  # Relative error
+  if(!is.null(rel_threshold)){
+
+    rel_err <- abs(est - true) / abs(true)
+
+    return(
+      mean(rel_err <= rel_threshold)
+    )
+  }
+
+  # Absolute error
+  if(!is.null(abs_threshold)){
+
+    abs_err <- abs(est - true)
+
+    return(
+      mean(abs_err <= abs_threshold)
+    )
+  }
+
+  stop("Provide rel_threshold or abs_threshold")
+}
+
+mean_absolute_bias <- function(
+    T_true,
+    T_est,
+    tol = 1e-8
+){
+
+  true <- offdiag(T_true)
+  est  <- offdiag(T_est)
+
+  idx <- abs(true) >= tol
+
+  mean(abs(est[idx] - true[idx]))
+}
+```
+
+
+
 ```{r}
 compute_total_effect_matrix <- function(B){
   p <- nrow(B)
   t(solve(diag(p) - B) - diag(p))
 }
 
+cg <- est
 get_all_dags <- function(cg){
-  cg_nel <- igraph::as_graphnel(caugi::as_igraph(cg))
-  cg_adj <- as(cg_nel, "matrix")
-  all_dags <- pdag2allDags(cg_adj)
+  #cg_nel <- igraph::as_graphnel(caugi::as_igraph(cg))
+  #cg_adj <- as(cg_nel, "matrix")
+  cg_adj <- as_adjacency(cg)
+  all_dags <- pdag2allDags(cg_adj, verbose = FALSE)
   p <- nrow(cg_adj)
   lapply(seq_len(nrow(all_dags$dags)), function(i){
     dag_adj <- matrix(
@@ -448,6 +547,7 @@ get_all_dags <- function(cg){
   })
 }
 
+# gt and est should be caugi
 compute_graph_metrics <- function(gt, est){
   list(
     shd = shd(gt, est),
@@ -474,28 +574,49 @@ calculate_total_effect_matrices <- function(cg, df, PDAG = TRUE){
   }
 }
 
+gt <- gt_sim
+
 # Total effect distance
-calculate_total_effect_distance <- function(gt, est, df, PDAG = TRUE){
+calculate_total_effect_distance <- function(gt, est, df, PDAG = TRUE, norm = c("cor", "mae", "")){
 
   # True total effect matrix
-  gt_nel <- igraph::as_graphnel(caugi::as_igraph(gt))
-  B_true <- graphNEL_to_B(gt_nel)
-  T_true <- compute_total_effect_matrix(B_true)
+  #gt_nel <- igraph::as_graphnel(caugi::as_igraph(gt))
+  #B_true <- graphNEL_to_B(gt_nel)
+  #T_true <- compute_total_effect_matrix(B_true)
+  T_true <- calculate_total_effect_matrices(cg = gt, df = df, PDAG = FALSE)
 
   # Estimated total effect matrices
-  T_est <- calculate_total_effect_matrices(
-    cg = est,
-    df = df,
-    PDAG = PDAG
-  )
+  T_est <- calculate_total_effect_matrices(cg = est, df = df, PDAG = PDAG)
+  
+  compare_effects <- function(T_hat){
 
+    idx <- row(T_true) != col(T_true)
+
+    true <- T_true[idx]
+    est  <- T_hat[idx]
+    tol = 0.01
+    metrics <- list(
+      nz_recall = nonzero_effects_recall(T_true, T_est, tol = tol),
+      true_effect_recall = true_effects_recall(T_true, T_est, abs_threshold = 0.01, rel_threshold = NULL, tol = tol),
+      avg_bias = mean_absolute_bias(T_true, T_est, tol = tol)
+      # mae = mean(abs(true - est)),
+      # rmse = sqrt(mean((true - est)^2)),
+      # cor = cor(true, est),
+      # sign_acc = mean(sign(true) == sign(est))
+    )
+    return(metrics)
+  }
+  
   # Compare
   if(PDAG){
-    sapply(T_est, function(x){
-      mean(abs(T_true - x))
-    })
+    lapply(T_est, compare_effects)
+    #sapply(T_est, function(x){
+    #  mean(abs(T_true - x))
+    #})
   } else {
-    mean(abs(T_true - T_est))
+    compare_effects(T_est)
+    #mean(abs(T_true - T_est))
+    #cor(c(T_true), c(T_est))
   }
 }
 ```
@@ -508,58 +629,75 @@ calc_distance_metrics <- function(gt, est, graph_only = FALSE, df = NULL, PDAG =
     all_dags <- get_all_dags(est)
     metrics <- lapply(all_dags, function(dag){
       metrics_i <- compute_graph_metrics(gt, dag)
-      if(!graph_only){metrics_i$d_tce <- calculate_total_effect_distance(gt = gt, est = dag, df = df, PDAG = FALSE)}
+      if(!graph_only){metrics_i$tce <- calculate_total_effect_distance(gt = gt, est = dag, df = df, PDAG = FALSE)}
       metrics_i
     })
   } else {
     metrics <- compute_graph_metrics(gt, est)
-    if(!graph_only){metrics$d_tce <- calculate_total_effect_distance(gt, est, df, PDAG = FALSE)}
+    if(!graph_only){
+      metrics_tce <- calculate_total_effect_distance(gt, est, df, PDAG = FALSE)
+      metrics <- c(metrics, metrics_tce)
+      #metrics$tce <- calculate_total_effect_distance(gt, est, df, PDAG = FALSE)
+      
+      }
   }
   return(metrics)
 }
 ```
 
 ```{r}
-test <- calc_distance_metrics(gt = as_caugi(gt_sim), est = est, graph_only = FALSE, df = df, PDAG = TRUE)
+# Estimating multiset of distances
+#d_pdag <- calc_distance_metrics(gt = as_caugi(gt_sim), est = est, graph_only = FALSE, df = df, PDAG = #TRUE)
 
+# Selecting one DAG from estimated Markov equivalence class
 est_dag <- dag_from_pdag(est)
-test <- calc_distance_metrics(gt = as_caugi(gt_sim), est = est_dag, graph_only = FALSE, df = df, PDAG = FALSE)
-
+d_dag <- calc_distance_metrics(gt = gt_sim, est = est_dag, graph_only = FALSE, df = df, PDAG = FALSE)
+d_dag
 ```
 
-
-
-
-
-
-```{r}
-calc_distance_metrics <- function(gt, est, graph_only = FALSE, df = NULL, PDAG = TRUE){
-  if(!graph_only & is.null(df)){stop("If graph_only = FALSE, a df must be provided.")}
-  d_shd <- shd(gt, est)
-  d_sid <- aid(gt, est, type = "parent", normalize = FALSE)
-  d_aid_a <- aid(gt, est, type = "ancestor", normalize = FALSE)
-  d_aid_a_norm <- aid(gt, est, type = "ancestor", normalize = TRUE)
-  metrics <- list(shd = d_shd, sid = d_sid, aid = d_aid_a, aid_norm = d_aid_a_norm)
-  if(!graph_only){
-    metrics$tce <- calculate_total_effect_distance(gt, est, df, PDAG = FALSE)
-    }
-  return(metrics)
-}
-
-est_dag <- dag_from_pdag(est)
-
-calc_distance_metrics(gt = as_caugi(gt_sim), est = est, df = df)
-calc_distance_metrics(gt = as_caugi(gt_sim), est = est_dag, df = df)
-
-calc_distance_causal_
-```
-
-
+## Comparison to randomly generated DAGs
 
 ```{r}
 # Here the end result should be the metrics for each algorithm. Then we go to the null distributions
 ```
 
+```{r}
+# Function for generating random DAGs
+generate_random_dag <- function(p, e_prob){
+  #V_names <- as.character(sample(1:p)) # this determines topological order
+  #g_rand <- pcalg::randomDAG(p, prob = e_prob, lB=0.1, uB=1, V = V_names)
+  g_rand <- generate_graph(n = p, p = e_prob, class = "DAG")
+  return(g_rand)
+}
+
+# Function for calculating distance between ground truth and random DAG
+## gt must be a caugi graph
+calc_distance_random_dag <- function(gt, e_prob, df){
+  p <- length(gt)
+  g_rand <- generate_random_dag(p = p, e_prob = 0.5)
+  metrics <- calc_distance_metrics(gt, g_rand, graph_only = FALSE, df = df, PDAG = FALSE)
+  return(metrics)
+}
+```
+
+```{r}
+library(purrr)
+n <- 10
+rand_eval_results <- map_dfr(seq_len(n), ~ calc_distance_random_dag(gt = gt_sim, e_prob = 0.5, df = df))
+#rand_eval_results
+cor(rand_eval_results)
+# hist(rand_eval_results$d_tce)
+# hist(rand_eval_results$aid)
+# hist(rand_eval_results$sid)
+# hist(rand_eval_results$aid_norm)
+```
+
+
+## But did I get lucky?
+Now I repeated this with 20 different randomly chosen "ground truth DAGs"
+```{r}
+
+```
 
 
 # Results
@@ -571,12 +709,6 @@ It is a bit difficult to understand how well the algorithms actually performed. 
 ```{r}
 # Function for generating random DAGs
 
-generate_random_dag <- function(p, e_prob){
-  V_names <- as.character(sample(1:p)) # this determines topological order
-  g_rand <- pcalg::randomDAG(p, prob = e_prob, lB=0.1, uB=1, V = V_names)
-  return(as_caugi(g_rand))
-  
-}
 
 gt_sim <- as_caugi(gt_sim)
 calc_distance_random_dag <- function(gt, e_prob){
