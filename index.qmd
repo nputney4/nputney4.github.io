@@ -14,7 +14,7 @@ about:
       href: https://github.com/nputney4/
       icon: github
     - text: Email
-      href: mailto:nick.putney@wur.nl
+      href: mailto:nicholas.putney@wur.nl
       icon: envelope
 ---
 

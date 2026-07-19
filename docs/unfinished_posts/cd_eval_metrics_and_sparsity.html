@@ -6,9 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Nicholas Putney">
 
-<title>Are causal discovery algorithms good enough for practical problems? – Nicholas Putney</title>
+<title>cd_eval_metrics_and_sparsity – Nicholas Putney</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,86 +20,31 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-  margin-bottom: 0em;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
-<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
-<script src="../../site_libs/clipboard/clipboard.min.js"></script>
-<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="../../site_libs/quarto-search/fuse.min.js"></script>
-<script src="../../site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="../../">
-<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
-<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="../../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
-<script src="../../site_libs/quarto-html/popper.min.js"></script>
-<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="../../site_libs/quarto-html/anchor.min.js"></script>
-<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-707d8167ce6003fca903bfe2be84ab7f.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
-<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-051849a2a1e0f68eed7367b8dc269a5d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-afa1767ab894c633a6efdfa517d42c1b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-051849a2a1e0f68eed7367b8dc269a5d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-707d8167ce6003fca903bfe2be84ab7f.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-051849a2a1e0f68eed7367b8dc269a5d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-afa1767ab894c633a6efdfa517d42c1b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-051849a2a1e0f68eed7367b8dc269a5d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -129,37 +73,8 @@ div.csl-indent {
   }
 }</script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="../../styles.css">
+<link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -331,9 +246,9 @@ window.Quarto = {
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <a href="../index.html" class="navbar-brand navbar-brand-logo">
     </a>
-    <a class="navbar-brand" href="../../index.html">
+    <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">Nicholas Putney</span>
     </a>
   </div>
@@ -344,23 +259,23 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../index.html"> 
+    <a class="nav-link" href="../index.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../cv.html"> 
+    <a class="nav-link" href="../cv.html"> 
 <span class="menu-text">CV</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../research.html"> 
+    <a class="nav-link" href="../research.html"> 
 <span class="menu-text">Research</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../blog.html"> 
+    <a class="nav-link" href="../blog.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../resources.html"> 
+    <a class="nav-link" href="../resources.html"> 
 <span class="menu-text">Resources</span></a>
   </li>  
 </ul>
@@ -372,60 +287,25 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
-  <ul class="collapse">
-  <li><a href="#causal-graphs-can-be-useful" id="toc-causal-graphs-can-be-useful" class="nav-link" data-scroll-target="#causal-graphs-can-be-useful">Causal graphs can be useful!</a></li>
-  <li><a href="#where-do-the-causal-graphs-come-from" id="toc-where-do-the-causal-graphs-come-from" class="nav-link" data-scroll-target="#where-do-the-causal-graphs-come-from">Where do the causal graphs come from?</a></li>
-  <li><a href="#causal-discovery-to-the-rescue" id="toc-causal-discovery-to-the-rescue" class="nav-link" data-scroll-target="#causal-discovery-to-the-rescue">Causal discovery to the rescue?</a></li>
-  <li><a href="#maybe-not" id="toc-maybe-not" class="nav-link" data-scroll-target="#maybe-not">Maybe not…</a></li>
-  <li><a href="#objective-of-this-post" id="toc-objective-of-this-post" class="nav-link" data-scroll-target="#objective-of-this-post">Objective of this post</a></li>
-  </ul></li>
-  <li><a href="#simulating-data" id="toc-simulating-data" class="nav-link" data-scroll-target="#simulating-data">Simulating data</a></li>
-  <li><a href="#running-causal-discovery-algorithms" id="toc-running-causal-discovery-algorithms" class="nav-link" data-scroll-target="#running-causal-discovery-algorithms">Running causal discovery algorithms</a></li>
-  <li><a href="#evaluating-algorithms" id="toc-evaluating-algorithms" class="nav-link" data-scroll-target="#evaluating-algorithms">Evaluating algorithms</a>
-  <ul class="collapse">
-  <li><a href="#metrics" id="toc-metrics" class="nav-link" data-scroll-target="#metrics">Metrics</a>
-  <ul class="collapse">
-  <li><a href="#structural-hamming-distance" id="toc-structural-hamming-distance" class="nav-link" data-scroll-target="#structural-hamming-distance">Structural hamming distance</a></li>
-  <li><a href="#structural-intervention-distance" id="toc-structural-intervention-distance" class="nav-link" data-scroll-target="#structural-intervention-distance">Structural intervention distance</a></li>
-  <li><a href="#adjustment-identification-distance" id="toc-adjustment-identification-distance" class="nav-link" data-scroll-target="#adjustment-identification-distance">Adjustment identification distance</a></li>
-  <li><a href="#others" id="toc-others" class="nav-link" data-scroll-target="#others">Others</a></li>
-  </ul></li>
-  </ul></li>
-  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
-  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
-  <li><a href="#conclusions" id="toc-conclusions" class="nav-link" data-scroll-target="#conclusions">Conclusions</a></li>
-  <li><a href="#additional-notes" id="toc-additional-notes" class="nav-link" data-scroll-target="#additional-notes">Additional notes</a></li>
-  </ul>
-</nav>
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content column-page" id="quarto-document-content">
 
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Are causal discovery algorithms good enough for practical problems?</h1>
+<h1 class="title">cd_eval_metrics_and_sparsity</h1>
 </div>
 
 
 
-<div class="quarto-title-meta">
+<div class="quarto-title-meta column-page">
 
-    <div>
-    <div class="quarto-title-meta-heading">Author</div>
-    <div class="quarto-title-meta-contents">
-             <p>Nicholas Putney </p>
-          </div>
-  </div>
     
   
     
@@ -436,135 +316,10 @@ window.Quarto = {
 </header>
 
 
-<section id="introduction" class="level1">
-<h1>Introduction</h1>
-<section id="causal-graphs-can-be-useful" class="level2">
-<h2 class="anchored" data-anchor-id="causal-graphs-can-be-useful">Causal graphs can be useful!</h2>
-<p>A causal graph provides a compact representation of the causal relationships of the system being studied and allows one to reason about what would happen under changes to the system.</p>
-<p>For example, take the two graphs below. Graph <span class="math inline">\(A\)</span> suggests that increasing coffee consumption will indeed increase lifespan, via increasing antioxidant activity. Graph <span class="math inline">\(B\)</span>, however, suggests that changing coffee intake would have no impact on lifespan and the only reasons why we see a relationship between the two is due to their relationship with genetics. For example, certain genes may “cause” people to drink more coffee and be related to longevity.</p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="cd_metris_post_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="2000"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Beyond being a convenient representation, causal graphs can also be used as a formal tool to guide (observational) data analysis. For example, if graph <span class="math inline">\(A\)</span> is your chosen representation, then estimating the causal effect of coffee on lifespan only requires collecting data on coffee consumption and lifespan, because there are no confounders. On the other hand, graph <span class="math inline">\(B\)</span> would require one to “adjust” somehow for genetics by including it in the statistical model. Note that these graphs provide information about “identification” of causal effects and not how to “estimate” them. For more info about using causal graph in applied research, see e.g. <span class="citation" data-cites="tennantUseDirectedAcyclic2021">Tennant et al. (<a href="#ref-tennantUseDirectedAcyclic2021" role="doc-biblioref">2021</a>)</span>.</p>
-</section>
-<section id="where-do-the-causal-graphs-come-from" class="level2">
-<h2 class="anchored" data-anchor-id="where-do-the-causal-graphs-come-from">Where do the causal graphs come from?</h2>
-<p>The work of <span class="citation" data-cites="tennantUseDirectedAcyclic2021">Tennant et al. (<a href="#ref-tennantUseDirectedAcyclic2021" role="doc-biblioref">2021</a>)</span> also highlights an important challenge: how does one construct the causal graph in the first place? Typically it is done via consultation with substantive experts and by searching literature. However, different experts can produce rather different graphs and evidence to construct such a detailed graph may be lacking altogether in some fields.</p>
-<p>For example, due to high degrees of confounding and inherent difficulties with conducting randomized controlled trials, causal interpretation in nutrition research is hard. There are also challenges in the field of healthy longevity, where the goal is to determine which exposures or treatments will contribute to maintaining a high quality of life into old age.</p>
-</section>
-<section id="causal-discovery-to-the-rescue" class="level2">
-<h2 class="anchored" data-anchor-id="causal-discovery-to-the-rescue">Causal discovery to the rescue?</h2>
-<p>Does this mean that estimating causal effects from observational data is not possible for these fields? Not necessarily - different causal structures give rise to different testable patterns in the data. One idea then is to first learn the causal graph from the data and then use it to estimate the causal effect of interest. In fact, methods for learning (some parts of) a causal graph from observational data have been developed since the 1980s. This task of inferring a causal graph from data is generally referred to as “causal discovery” or “structure learning”. A relatively gentle introduction to the field of causal discovery was written by <span class="citation" data-cites="vowelsDyaDAGsSurvey2022">Vowels, Camgoz, and Bowden (<a href="#ref-vowelsDyaDAGsSurvey2022" role="doc-biblioref">2022</a>)</span>.</p>
-</section>
-<section id="maybe-not" class="level2">
-<h2 class="anchored" data-anchor-id="maybe-not">Maybe not…</h2>
-<p>While these methods have a long history and new methods are being developed at an increasing pace, their adoption in applied research has been slow. Part of the reason may be their disconnection from the literature on causal effect estimation. The disconnection may be partly due to historically reasons, as causal effect estimation methods developed in the fields of biostatistics, epidemiology, economics, and sociology, while causal discovery methods have their roots in computer science, AI, and mathematics. Furthermore, the goals are often different: the vast majority of causal discovery methods infer a complete graph structure, whereas the aim in applied research is more targeted (e.g.&nbsp;the effect of a single exposure on an outcome).</p>
-<p>Furthermore, most causal discovery methods can recover the “Markov equivalence class” of a graph, which means the output may contain undirected edges. Given that a single edge direction can have meaningful change on causal conclusions, this may limit its usefulness in guiding data analyses in applied research.</p>
-</section>
-<section id="objective-of-this-post" class="level2">
-<h2 class="anchored" data-anchor-id="objective-of-this-post">Objective of this post</h2>
-<p>The goal of this post is the following: to explore how “useful” causal discovery methods can be in applied research. Useful is defined in the context of below “workflow”:</p>
-<ol type="1">
-<li>Formulate a research question</li>
-<li>Translate research question into a mathematical object (i.e.&nbsp;causal estimand)</li>
-<li>Write down assumptions about the system in the form of a causal graph</li>
-<li>From the graph, determine which information is necessary to answer the research question</li>
-<li>Choose an appropriate statistical model, run the model, conduct sensitivity analyses, interpret results, etc.</li>
-</ol>
-<p>Causal discovery has strong potential to aid in 3., especially when the system under study is not well understood.</p>
-</section>
-</section>
-<section id="simulating-data" class="level1">
-<h1>Simulating data</h1>
-<p>The data generating processes considered here will be kept simple to see how discovery methods perform in the best case scenario.</p>
-<p>I generated multivariate normal data, with only five variables and a probability of connecting an edge set to 0.5. Again, the idea to keep things simple. F</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate a random ground truth DAG </span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>e_prob <span class="ot">&lt;-</span> <span class="fl">0.5</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="dv">5</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> pcalg<span class="sc">::</span><span class="fu">randomDAG</span>(p, <span class="at">prob =</span> e_prob, <span class="at">lB=</span><span class="fl">0.1</span>, <span class="at">uB=</span><span class="dv">1</span>)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">rmvDAG</span>(<span class="dv">1000</span>, gt, <span class="at">errDist=</span><span class="st">"normal"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</section>
-<section id="running-causal-discovery-algorithms" class="level1">
-<h1>Running causal discovery algorithms</h1>
-<p>I now run the PC algorithm using the Fisher-Z test (see e.g.&nbsp;https://www.statisticshowto.com/fisher-z/).</p>
-</section>
-<section id="evaluating-algorithms" class="level1">
-<h1>Evaluating algorithms</h1>
-<section id="metrics" class="level2">
-<h2 class="anchored" data-anchor-id="metrics">Metrics</h2>
-<p>We now need some way of comparing the inferred graph to the true graph. Below is a brief background and motivation for some of the commonly used metrics. It is perhaps a bit long but I think aligning metrics with the research question is important, so it is worth the time.</p>
-<section id="structural-hamming-distance" class="level3">
-<h3 class="anchored" data-anchor-id="structural-hamming-distance">Structural hamming distance</h3>
-<p>The most common metric used is the structural hamming distance (SHD), which counts the number of edge additions, deletions, or reversals necessary to go from one graph to the other.</p>
-<p></p><p></p><details><summary>SHD formula.</summary><blockquote class="blockquote"><p></p>
-<p>Define <span class="math inline">\(\mathcal{G}\)</span> as the true graph, <span class="math inline">\(\mathcal{H}\)</span> as the estimated graph, and <span class="math inline">\((i,j) \in V \times V\)</span> as edges.</p>
-<p>The SHD can be defined as</p>
-<p><span class="math display">\[\text{SHD}(\mathcal{G}, \mathcal{H}) = \sum_{i,j \in V \times V} \mathbb{1}(\text{EdgeType}_{\mathcal{G}}(i,j) \ne \text{EdgeType}_{\mathcal{H}}(i,j)),\]</span></p>
-<p>where <span class="math inline">\(\mathbb{1}\)</span> is the indicator function.<br>
-</p></blockquote></details><p></p><p></p>
-<p>Remember that the context of this post is determining how useful causal discovery algorithms can be for helping practitioners answer specific causal questions. The SHD does not include any notion of causality in its definition.</p>
-<p>Take the below plots as an example of how this could be problematic. <span class="math inline">\(\mathcal{G}\)</span> is the true graph and <span class="math inline">\(\mathcal{H_1}\)</span> and <span class="math inline">\(\mathcal{H_2}\)</span> are graphs each one change away from <span class="math inline">\(G\)</span> (i.e.&nbsp;<span class="math inline">\(SHD(\mathcal{G}, \mathcal{H_1}) = SHD(\mathcal{G}, \mathcal{H_2}) = 1\)</span>).</p>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="cd_metris_post_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="2400"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>Even though the SHD for <span class="math inline">\(\mathcal{H_1}\)</span> and <span class="math inline">\(\mathcal{H_2}\)</span> are the same, the graphs lead to different causal conclusions. Let’s say we are interested in estimating the effect of <span class="math inline">\(X_1\)</span> on <span class="math inline">\(X_3\)</span>, <span class="math inline">\(P(X_3 | \text{do}(X_3 = c))\)</span>. According to <span class="math inline">\(\mathcal{G}\)</span>, a correct adjustment set (think: should include in the statistical model) would be <span class="math inline">\(\{X_4\}\)</span>. The extra arrow in <span class="math inline">\(\mathcal{H_1}\)</span> does not change this adjustment set. On the other hand, <span class="math inline">\(\mathcal{H_2}\)</span> suggests that we should not adjust for <span class="math inline">\(X_4\)</span>, which would lead to an incorrect estimate.</p>
-<p>Despite this drawback, the SHD is reported in essentially every paper that evaluates causal discovery algorithms.</p>
-</section>
-<section id="structural-intervention-distance" class="level3">
-<h3 class="anchored" data-anchor-id="structural-intervention-distance">Structural intervention distance</h3>
-</section>
-<section id="adjustment-identification-distance" class="level3">
-<h3 class="anchored" data-anchor-id="adjustment-identification-distance">Adjustment identification distance</h3>
-</section>
-<section id="others" class="level3">
-<h3 class="anchored" data-anchor-id="others">Others</h3>
-</section>
-</section>
-</section>
-<section id="results" class="level1">
-<h1>Results</h1>
-</section>
-<section id="summary" class="level1">
-<h1>Summary</h1>
-</section>
-<section id="conclusions" class="level1">
-<h1>Conclusions</h1>
-</section>
-<section id="additional-notes" class="level1">
-<h1>Additional notes</h1>
-<ul>
-<li>All causal graphs were made using the ‘caugi’ R package (https://caugi.org/)</li>
-<li>I am using R version 4.5.1</li>
-</ul>
 
 
 
-</section>
-
-<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
-<div id="ref-tennantUseDirectedAcyclic2021" class="csl-entry" role="listitem">
-Tennant, Peter W G, Eleanor J Murray, Kellyn F Arnold, Laurie Berrie, Matthew P Fox, Sarah C Gadd, Wendy J Harrison, et al. 2021. <span>“Use of Directed Acyclic Graphs (DAGs) to Identify Confounders in Applied Health Research: Review and Recommendations.”</span> <em>International Journal of Epidemiology</em> 50 (2): 620–32. <a href="https://doi.org/10.1093/ije/dyaa213">https://doi.org/10.1093/ije/dyaa213</a>.
-</div>
-<div id="ref-vowelsDyaDAGsSurvey2022" class="csl-entry" role="listitem">
-Vowels, Matthew J., Necati Cihan Camgoz, and Richard Bowden. 2022. <span>“D’ya Like DAGs? A Survey on Structure Learning and Causal Discovery.”</span> <em>ACM Comput. Surv.</em> 55 (4): 82:1–36. <a href="https://doi.org/10.1145/3527154">https://doi.org/10.1145/3527154</a>.
-</div>
-</div></section></div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
